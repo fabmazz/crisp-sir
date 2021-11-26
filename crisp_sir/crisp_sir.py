@@ -4,6 +4,11 @@ import numpy as np
 from numba import njit, float64, int_
 from numba.experimental import jitclass
 
+
+from .base import get_state_time
+from .observ import *
+
+
 pars_spec = [(v,float64) for v in ("pautoinf","p_seed", "lamda", "mu", "p_sus",)] + \
     [("N", int_),("T", int_)]
 @jitclass(pars_spec)
@@ -161,71 +166,6 @@ def calc_B_ratio(contacts, u, lamda, p0, T, state, verbose=False):
     return logp_b, totnskip
 
 
-def make_observat_term(obsdf, N, T, mat_obs, node_key="node", obs_key="obs",time_key="time"):
-    logpobsall= {}
-    T_crisp = T+2
-    ## nota che T=t_limit+1 e' il numero dei tempi del sistema
-    if len(obsdf) < 1:
-        return logpobsall
-    for node in range(N):
-        idx = obsdf[node_key] == node
-        if sum(idx) <= 0:
-            #print("No obs")
-            continue
-        
-
-        obs_u = obsdf[idx]
-        #print(node,obs_u)
-        obs_u = obs_u[[obs_key,time_key]].to_numpy()
-        
-        #obs_u = [tuple(x) for x in obs_u]
-        
-
-        logpobsall[node] = _calc_logpobs_u(T_crisp=T_crisp, obs_u=obs_u, mat_obs=mat_obs)
-        
-    return logpobsall
-@njit()
-def _calc_logpobs_u(T_crisp, obs_u, mat_obs):
-    logpobs_u = np.full((T_crisp,T_crisp+1),np.nan)
-    for t0 in range(0, T_crisp):
-            for dinf in range(1,min(T_crisp-t0+1,T_crisp+1)):
-                logpobs_u[t0,dinf] = observ_term_i(obs_u,mat_obs,t0,dinf)
-    return logpobs_u
-
-@njit()
-def observ_term_i(obs_list_i, mat_pobs, t0, d_inf, log=True):
-    """
-    Give the observation term, 
-    mat_po represents the confusion matrix
-    observations must be (state,time) sorted by time index
-    mat_pobs is index by [obs][state]
-    """
-    tot = 0
-    for tup in obs_list_i:
-        st = int(tup[0])
-        t = int(tup[1])
-        state_u = get_state_time(t, t0, d_inf)
-        tot += np.log(mat_pobs[st][state_u])
-    if log:
-        return tot #np.exp(tot)
-    else:
-        return np.exp(tot)
-
-
-@njit()
-def get_state_time(time, t0, d_inf):
-    """ 
-    convention: first time is 0, last time is T-1
-    stays for t0 times in state S -> 0 ... t0-1
-    - at time t0 is I
-    - at time t0+d_inf is R
-    """
-    if time < t0:
-        return 0
-    if time < t0+d_inf:
-        return 1
-    return 2
-
 @njit()
 def calc_prob_times(T_crisp, gamma, p0inf, Ap1, Linf, prec, logp_b, psus, logC_term=None):
     #val_times = np.zeros((numtstates,2),dtype=np.int_)
@@ -348,15 +288,17 @@ def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0, seed=None
     T = pars.T
     T_crisp = pars.T+1
     p0inf = geom_prob(pars.pautoinf,T+1,nosum=False)
-    p0 = pars.pautoinf
+    #p0 = pars.pautoinf
     prec = geom_prob(pars.mu,T+2,nosum=False)
 
     logC_term = make_observat_term(observ,pars.N,T=pars.T,
                                      mat_obs=mat_obs)
     
-    randgen = np.random.RandomState(seed)
     if seed is not None:
         set_numba_seed(seed)
+        randgen = np.random.RandomState(seed)
+    else:
+        randgen = np.random
     tinf = randgen.randint(0,T) 
     ul = randgen.randint(0,N)
     if state is None:

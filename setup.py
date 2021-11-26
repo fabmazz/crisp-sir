@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name="crisp-sir-sibyl",
-    version="0.0.1",
+    version="0.0.2",
     author="Fabio Mazza",
     author_email="fab4mazz@gmail.com",
     description="Implementation of CRISP for the SIR model",
