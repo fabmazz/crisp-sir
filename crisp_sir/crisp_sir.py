@@ -310,7 +310,7 @@ def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0, seed=None
             #save_state(stats=stats, state=state)
             stats[u]+=r[state[u]]
         if (st_idx%400)==0:
-            print(f"{st_idx:5d}/{NUM_STEPS:5d}", end="\r")
+            print(f"{st_idx:6d} /{NUM_STEPS:6d}", end="\r")
 
     print("Finished   ")
     return state, stats, changes
