@@ -250,7 +250,9 @@ def _write_state(u, t0, dinf, T, state):
     for t in range(T):
         state[u][t] = get_state_time(t, t0, dinf)
 
-def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0, seed=None, state=None):
+def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0,
+     seed=None, state=None,
+     start_inf=False):
     """
     Run the whole CRISP method
     on the SIR problem
@@ -271,20 +273,23 @@ def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0, seed=None
         randgen = np.random.RandomState(seed)
     else:
         randgen = np.random
+    #ninf_start = max(1, int(pars.p_seed*N))
     tinf = randgen.randint(0,T) 
     ul = randgen.randint(0,N)
     if state is None:
         state = np.zeros((N,T),dtype=np.int8)
         ## starting condition is not really important
-        state[ul,tinf:] = 1
+        if(start_inf):
+            state[ul,tinf:] = 1
 
-    stats = np.zeros((N,T,3))
+    stats = np.zeros((N,T,3),dtype=np.int_)
     changes = []
     contacts_CRISP = contacts[:,:3].astype(int)
     #contacts = contacts_CRISP
     #nctsskip = np.zeros(NUM_STEPS, dtype=np.int_)
     NUM_STEPS = num_samples
     tim_l = time.time()
+    r = np.eye(3,dtype=np.int_)
     for st_idx in range(NUM_STEPS):
         u = int(randgen.rand()*N)
         
@@ -302,7 +307,7 @@ def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0, seed=None
         _write_state(u, t0=change[1], dinf=change[2], T=pars.T, state=state)
 
         changes.append(change)
-        r = np.eye(3,dtype=np.int_)
+        
         #st_1h = r[state]
         #trace_states[st_idx]=st_1h.sum(0)
         
