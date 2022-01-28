@@ -1,0 +1,358 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Notes for CRISP code on SIR
+\end_layout
+
+\begin_layout Standard
+We consider times from 
+\begin_inset Formula $t=0$
+\end_inset
+
+ to 
+\begin_inset Formula $t=T$
+\end_inset
+
+ (so we have 
+\begin_inset Formula $T+1$
+\end_inset
+
+ times), so that a node becomes infected on 
+\begin_inset Formula $t=t_{0}$
+\end_inset
+
+ and recovered at 
+\begin_inset Formula $t=t_{0}+d_{I}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p_{u,t}=p_{u}\left(t\mid C_{t}\right)=\exp\left\{ \sum_{k\in\partial u^{t}}\theta\left(t-t_{0,k}\right)\nu_{ku}^{t}\right\} 
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+is the probability of not being infected at time t, so that 
+\begin_inset Formula $x_{u}^{t}=S$
+\end_inset
+
+ and 
+\begin_inset Formula $x_{u}^{t+1}=S$
+\end_inset
+
+.
+ 
+\begin_inset Formula $\theta\left(s\right)=1$
+\end_inset
+
+ when 
+\begin_inset Formula $s>=0$
+\end_inset
+
+, else 
+\begin_inset Formula $\theta\left(s\right)=0$
+\end_inset
+
+.
+ 
+\begin_inset Formula $v_{ku}^{t}=\log\left(1-\lambda_{ku}^{t}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Term A
+\end_layout
+
+\begin_layout Standard
+We have
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+A\left(t_{0},d_{I}\right)=\left(\prod_{t=0}^{t_{0}-2}p_{u,t}\right)l_{0}\left(t_{0}\right)l_{inf}\left(t_{0}-1\right)l_{I}\left(d_{I}\right)\pi_{0}\left(t_{0}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\pi_{0}\left(t_{0}\right)$
+\end_inset
+
+ is the source probability But this is valid only for certain values of
+ 
+\begin_inset Formula $t_{0}$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\log A\left(t_{0},d_{I}\right)=\log l_{I}\left(d_{I}\right)+\log\pi_{0}\left(t_{0}\right)+\theta\left(t_{0}-1\right)\left[\log l_{0}\left(t_{0}\right)+\log l_{inf}\left(t_{0}-1\right)\right]+\theta\left(t_{0}-2\right)K_{u}\left(t_{o}-2\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula 
+\begin{equation}
+K_{u}\left(t\right)=\sum_{s=0}^{t}\log p_{u,s}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Of course: 
+\begin_inset Formula $l_{0}\left(t\right)=\left(1-p_{0}\right)^{t-1}p_{0}$
+\end_inset
+
+ and 
+\begin_inset Formula $l_{I}\left(d\right)=\left(1-\mu\right)^{d-1}\mu$
+\end_inset
+
+ are precomputed
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+l_{inf}\left(t\right)=\frac{1}{p_{0}}\left[1-\left(1-p_{0}\right)p_{u,t}\right]
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Term B
+\end_layout
+
+\begin_layout Standard
+Notes from remarkable
+\begin_inset Formula 
+\begin{align*}
+\log B_{u}\left(t_{0},d_{I}\right) & =const\,+\sum_{t=t_{0}}^{t_{0}+d_{I}-1}\left[\log B\left(z_{u},t,Z_{t}^{I}\right)-\log B\left(z_{u},t,Z_{t}^{\neg I}\right)\right]\\
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\log B_{u}\left(t_{0},d_{I},t\right)=\sum_{v\in\partial u^{t}}\left\{ \boldsymbol{1}\left[t\leq t_{o,v}-2\right]\log f\left(v,t,Z_{t}\right)+\boldsymbol{1}\left[t=t_{o,v}-1\right]\log\left(1-f\left(v,t,Z_{t}\right)\right)\right\} 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\log B_{u}\left(t_{0},d_{I}\right) & =const\,+\sum_{v\in\partial u}\sum_{t=t_{0}}^{t_{0}+d_{I}-1}\left\{ \boldsymbol{1}\left[t\leq t_{o,v}-2\right]\left(\log\frac{f\left(v,t,Z_{t}^{I}\right)}{f\left(v,t,Z_{t}^{\neg I}\right)}\right)+\boldsymbol{1}\left[t=t_{o,v}-1\right]\left(\log\frac{1-f\left(v,t,Z_{t}^{I}\right)}{1-f\left(v,t,Z_{t}^{\neg I}\right)}\right)\right\} \\
+ & =C+\sum_{v\in\partial u}\sum_{t=t_{0}}^{t_{0}+d_{I}-1}\left\{ \boldsymbol{1}\left[t\leq t_{o,v}-2\right]\left(\nu_{uv}^{t}\right)+\boldsymbol{1}\left[t=t_{o,v}-1\right]\left(\log\frac{1-f\left(v,t,Z_{t}^{I}\right)}{1-f\left(v,t,Z_{t}^{\neg I}\right)}\right)\right\} 
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+f\left(v,t,Z_{t}\right)=\left(1-p_{0}\right)\prod_{k\in\partial v^{t}}e^{\nu_{kv}^{t}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f\left(v,t,Z_{t}^{I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}}\right)e^{\nu_{uv}^{t}}=f_{v\backslash u}\left(t,Z_{t}\right)e^{\nu_{uv}^{t}}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f\left(v,t,Z_{t}^{\neg I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}}\right)=f_{v\backslash u}\left(t,Z_{t}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\log B_{u}\left(t_{0},d_{I}\right)=C+\sum_{v\in\partial u}\left\{ \sum_{t=t_{0}}^{\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)}\nu_{uv}^{t}+\boldsymbol{1}\left[t_{0}+1\leq t_{0,v}\leq t_{0}+d_{I}\right]\left(\log\frac{1-f_{v\backslash u}\left(t_{o,v}-1,Z_{t}\right)e^{\nu_{uv}^{t=t_{o,v}-1}}}{1-f_{v\backslash u}\left(t_{o,v}-1,Z_{t}\right)}\right)\right\} 
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note that if 
+\begin_inset Formula $\nu_{uv}=0$
+\end_inset
+
+ at time 
+\begin_inset Formula $t=t_{0,v}-1$
+\end_inset
+
+, than the second part disappears
+\end_layout
+
+\begin_layout Standard
+note that 
+\begin_inset Formula $Z\left(t\right)=\sum_{s=0}^{t}\nu_{uv}^{s}$
+\end_inset
+
+ , we can precompute
+\begin_inset Formula 
+\[
+\sum_{t=t_{0}}^{\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)}\nu_{uv}^{t}=Z\left(\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)\right)-Z\left(t_{0}-1\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Part C
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\prod_{obs}P\left(x_{o}\mid z_{u,t}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

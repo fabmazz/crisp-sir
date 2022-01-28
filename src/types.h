@@ -22,13 +22,13 @@ namespace Epi{
 
 
         void add_neighbor(const int& idx, const int& T);
+        bool set_contact(const int& j, const real_t& loglam, const uint& t);
 
         Node(int i): idx(i) {};
 
-    };
+        bool has_neigh(const int& j);
 
-    //void Node::set_data();
-    
+    };    
     
     void Node::add_neighbor(const int& i, const int& T){
 
@@ -43,6 +43,27 @@ namespace Epi{
         loglambdas.push_back(ArrayReal(0., T));
 
     }
+    bool Node::set_contact(const int& j, const real_t& loglam, const uint& t){
+
+        auto itr = neighs.find(j);
+        if (itr == neighs.end())
+            return false;
+        const int& j_idx = itr->second;
+
+        ArrayReal& llam = loglambdas.at(j_idx);
+        if (t>=llam.size()) return false;
+        llam[t] = loglam;
+
+        return true;
+    }
+
+    bool Node::has_neigh(const int& j){
+        auto itr = neighs.find(j);
+        if (itr == neighs.end())
+            return false;
+        else return true;
+    }
+
 }
 
 #endif
