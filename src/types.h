@@ -4,11 +4,17 @@
 #include <map>
 #include <valarray>
 #include <iostream>
+#include <sstream>
 
 typedef double real_t;
 typedef std::valarray<real_t> ArrayReal;
 typedef std::map<int, int> intdict;
 
+template <class ty> std::string tostring(ty val){
+    std::stringstream ss;
+    ss << val;
+    return ss.str();
+}
 
 namespace Epi{
 
@@ -21,7 +27,6 @@ namespace Epi{
         std::vector<ArrayReal> loglambdas;
 
 
-
         void add_neighbor(const int& idx);
         bool add_contact(const int& j,  const real_t& loglam, const uint& t);
         //this actually sets the contact
@@ -32,6 +37,7 @@ namespace Epi{
         };
 
         bool has_neigh(const int& j);
+
 
     };    
     
