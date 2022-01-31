@@ -228,6 +228,58 @@ l_{inf}\left(t\right)=\frac{1}{p_{0}}\left[1-\left(1-p_{0}\right)p_{u,t}\right]
 
 \end_layout
 
+\begin_layout Standard
+Programmatically:
+\end_layout
+
+\begin_layout Standard
+Always precompute 
+\begin_inset Formula $\log l_{o}\left(t\right)$
+\end_inset
+
+, 
+\begin_inset Formula $\log l_{I}\left(t\right)$
+\end_inset
+
+, 
+\begin_inset Formula $\log\pi_{0}\left(t\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute 
+\begin_inset Formula $\log p_{u}\left(t\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute 
+\begin_inset Formula $K_{u}\left(t\right)=\sum_{s=0}^{t}\log p_{u,s}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute 
+\begin_inset Formula $\log l_{inf}\left(t\right)=\log\left[1-\left(1-p_{0}\right)p_{u,t}\right]-\log p_{0}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Compute 
+\begin_inset Formula $A$
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Term B
 \end_layout
@@ -325,13 +377,13 @@ Note that if
 
 \begin_layout Standard
 note that 
-\begin_inset Formula $Z\left(t\right)=\sum_{s=0}^{t}\nu_{uv}^{s}$
+\begin_inset Formula $Z_{uv}\left(t\right)=\sum_{s=0}^{t}\nu_{uv}^{s}$
 \end_inset
 
  , we can precompute
 \begin_inset Formula 
 \[
-\sum_{t=t_{0}}^{\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)}\nu_{uv}^{t}=Z\left(\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)\right)-Z\left(t_{0}-1\right)
+\sum_{t=t_{0}}^{\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)}\nu_{uv}^{t}=Z_{uv}\left(\min\left(t_{0}+d_{I}-1,t_{0,v}-2\right)\right)-Z_{uv}\left(t_{0}-1\right)
 \]
 
 \end_inset
