@@ -11,7 +11,9 @@ using namespace Epi;
 PYBIND11_MAKE_OPAQUE(std::valarray<real_t>);
 PYBIND11_MAKE_OPAQUE(std::vector<Node>);
 
-
+/**
+ * From sib
+ */
 vector<real_t> make_vector(py::list & l)
 {
     vector<real_t> v(l.size());
@@ -24,6 +26,9 @@ vector<real_t> make_vector(py::list & l)
 
 PYBIND11_MODULE(crisp, m){
 
+        /**
+         * From sib
+         */
         py::class_<ArrayReal>(m, "ArrayReal", py::buffer_protocol())
         .def(py::init([](py::buffer const b) {
                 py::buffer_info info = b.request();
@@ -66,11 +71,12 @@ PYBIND11_MODULE(crisp, m){
                 });
 
     py::class_<Epi::Node>(m, "Node")
-        .def(py::init<const int &, const uint&>())
+        .def(py::init<const int &, const uint&>(), py::arg("i"), py::arg("T"))
         .def("add_neighbor", &Epi::Node::add_neighbor)
         .def("has_neighbor", &Epi::Node::has_neigh)
         .def("add_contact", &Epi::Node::add_contact,
-        "add new contact to the node", py::arg("j"), py::arg("lambda"), py::arg("t"));
+        "add new contact to the node", py::arg("j"), py::arg("lambda"), py::arg("t"))
+        .def_readwrite("loglambdas", &Epi::Node::loglambdas);
 
     m.def("geometric_logp", &Epi::geometric_logp, "Give the geometric distribution (1-p)^(t-1) *p",
         py::arg("p"), py::arg("T"));
