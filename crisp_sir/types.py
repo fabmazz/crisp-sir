@@ -24,12 +24,15 @@ class Node:
         self.loglambs = List.empty_list(float_array)
         self.neighs_in = set((1,))
         self.neighs_in.remove(1)
+        # sum of loglambs
         self.sum_lam = Dict.empty(key_type=types.int_,
             value_type=types.float64
         )
+        ## cumulative sum of loglambs, forward
         self.lam_cs_f = Dict.empty(key_type=types.int_,
             value_type=float_array
         )
+        ## cumulative sum of loglambs, backward
         self.lam_cs_b = Dict.empty(key_type=types.int_,
             value_type=float_array
         )
