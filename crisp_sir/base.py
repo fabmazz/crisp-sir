@@ -1,3 +1,4 @@
+import numpy as np
 from numba import njit, float64, int_
 from numba.experimental import jitclass
 
@@ -42,3 +43,11 @@ def get_state_time(time, t0, d_inf):
         return 1
     return 2
 
+
+def geometric_p_cut(p, maxT):
+    probs = np.zeros(maxT)
+    probs[1:] = p*((1-p)**np.arange(maxT-1))
+
+    probs[-1] = 1 - probs[:-1].sum()
+
+    return probs
