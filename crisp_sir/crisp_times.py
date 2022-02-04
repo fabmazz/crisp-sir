@@ -65,37 +65,39 @@ def c_logfvu(v,u, times, nodes, p0):
     return r
 
 
+@nb.njit()
 def calc_logB(nodes, times, u, T, p0):
 
     logB = np.zeros((T+2,T+1))
-
-
-
     nodd = nodes[u]
     for v in nodd.neighs_out:
         idx_v = nodd.neighs_out[v]
-        print(v)
+        #print(v)
         t0v = times[v][0]
         if t0v<=T and t0v>=1 and nodd.loglambs[idx_v][t0v-1] != 0:
             ## second part
-            ## t0
+            ## t0v <= T since it has to become infected, and not remain S
+            ## t0v >= 1 since it has to be infected, not be the source
             fvu = np.exp(c_logfvu(v,nodd.i, t0v-1, times, nodes, p0))
+            lam_uvt = nodd.loglambs[idx_v][t0v-1]
             #print(fvu)
         else:
             fvu = -2
-        lam_uvt = nodd.loglambs[idx_v][t0v-1]
+            lam_uvt=-2
         for t0 in range(T+2):
             for di in range(1,T+2):
                 t_max = min(t0+di-1,t0v-2)
                 if t0 <= T:
-                    ll = nodd.sum_lam[v] - nodd.lam_cs_b[v][t_max+1]
+                    ## if t0=T+1 it can't infect anyone
+                    ## if t0=T it could, but we have no contacts at t=T
+                    ll = nodd.sum_lam[v]
                     logB[t0,di-1] += ll
                     if t0 > 0:
-                        logB[t0,di-1] += nodd.lam_cs_f[v][t0-1] \
+                        logB[t0,di-1] -= nodd.lam_cs_f[v][t0-1]
+                    if t_max+1 < T:
+                        logB[t0,di-1] -= nodd.lam_cs_b[v][t_max+1]
                         
-                if t0v < t0+1:
-                    continue
-                if t0v > t0+di:
-                    continue
-                if fvu > 0:
+                if fvu >0 and t0v >=t0+1 and t0v <= t0+di:
                     logB[t0][di-1] += np.log(1-fvu*np.exp(lam_uvt))-np.log(1-fvu)
+
+    return logB
