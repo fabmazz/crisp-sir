@@ -46,8 +46,11 @@ def calc_logput(nodes, times, T, i):
     return logput
 
 @nb.njit()
-def c_logfvu(v,u, T, times, nodes, p0):
-    r = np.full(T,np.log(1-p0))
+def c_logfvu(v,u, times, nodes, p0):
+    #r = np.full(T,np.log(1-p0))
+    r = np.log(1-p0)
+    t0v = times[v][0]
+    
     for k in nodes[v].neighs_in:
         if k == u:
             #print("eq")
@@ -55,6 +58,44 @@ def c_logfvu(v,u, T, times, nodes, p0):
         t0k = times[k][0]
         idx_v = nodes[k].neighs_out[v]
         lambs_kv = nodes[k].loglambs[idx_v]
-        for t in range(t0k, min(t0k+times[k][1],T)):
-            r[t]+= lambs_kv[t]
+        #for t in range(t0k, min(t0k+times[k][1],T)):
+        #    r[t]+= lambs_kv[t]
+        if t0v >= t0k+1 and t0v <= t0k+times[k][1]:
+            r+= lambs_kv[t0v-1]
     return r
+
+
+def calc_logB(nodes, times, u, T, p0):
+
+    logB = np.zeros((T+2,T+1))
+
+
+
+    nodd = nodes[u]
+    for v in nodd.neighs_out:
+        idx_v = nodd.neighs_out[v]
+        print(v)
+        t0v = times[v][0]
+        if t0v<=T and t0v>=1 and nodd.loglambs[idx_v][t0v-1] != 0:
+            ## second part
+            ## t0
+            fvu = np.exp(c_logfvu(v,nodd.i, t0v-1, times, nodes, p0))
+            #print(fvu)
+        else:
+            fvu = -2
+        lam_uvt = nodd.loglambs[idx_v][t0v-1]
+        for t0 in range(T+2):
+            for di in range(1,T+2):
+                t_max = min(t0+di-1,t0v-2)
+                if t0 <= T:
+                    ll = nodd.sum_lam[v] - nodd.lam_cs_b[v][t_max+1]
+                    logB[t0,di-1] += ll
+                    if t0 > 0:
+                        logB[t0,di-1] += nodd.lam_cs_f[v][t0-1] \
+                        
+                if t0v < t0+1:
+                    continue
+                if t0v > t0+di:
+                    continue
+                if fvu > 0:
+                    logB[t0][di-1] += np.log(1-fvu*np.exp(lam_uvt))-np.log(1-fvu)
