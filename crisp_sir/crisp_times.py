@@ -3,7 +3,7 @@ import numba as nb
 
 from numba.typed import Dict
 
-from .base import sample, geometric_p_cut
+from .base import sample, geometric_p_cut, get_state_time
 
 #@nb.njit()
 ## do not jit since it is computed once
@@ -180,9 +180,15 @@ def sample_state(logprobs):
 
     return t0, dinf, pr_flat[idx]
 
+@nb.njit()
+def record_stats(stats,u, t0, dinf, T):
+    for t in range(T):
+        s = get_state_time(t, t0, dinf)
+        stats[u,t, s]+=1
+
     
 
-def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False):
+def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_times=None):
     T = pars.T
     N = pars.N
 
@@ -195,8 +201,9 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False):
         if debug: print("New generator")
         rng = np.random.RandomState(np.random.PCG64(seed))
 
+    if state_times is None:
+        state_times = rng.randint(0, T+2, (N,2))
 
-    state_times = rng.randint(0, T+2, (N,2))
 
     logp0s = np.log(geometric_p_cut(p0, T+2))
     logpdI = np.log(geometric_p_cut(mu, T+2))
@@ -206,8 +213,8 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False):
 
     changes = []
 
-    stats = np.zeros((N,2,T+2), dtype=np.int_)
-
+    stats_times = np.zeros((N,2,T+2), dtype=np.int_)
+    stats_st = np.zeros((N,T,3), dtype=np.int_)
     ##compute cache
     for i in nodes:
         nodes[i].calc_cache(T)
@@ -223,10 +230,11 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False):
         state_times[u,0] = t0
         state_times[u, 1] = dinf
 
-        stats[u,0, t0] +=1
-        stats[u,1,dinf] += 1
+        #stats_times[u,0, t0] +=1
+        #stats_times[u,1,dinf] += 1
+        record_stats(stats_st,u, t0, dinf, T)
 
         changes.append((u, t0, dinf, pr_nor))
 
 
-    return state_times, stats, changes
+    return state_times, stats_st, changes
