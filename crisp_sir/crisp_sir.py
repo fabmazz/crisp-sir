@@ -1,22 +1,13 @@
 import time
-from numba.core.decorators import jit
 import numpy as np
-from numba import njit
+from numba import njit, jit
 
 
-from .base import get_state_time
+from .base import get_state_time, sample
 from .observ import *
 
 
-@njit()
-def sample(p):
-    r = np.random.rand()
-    s = 0.0
-    for i in range(len(p)):
-        s += p[i]
-        if s > r:
-            return i
-    raise ValueError("Sum of probs > 1")
+
 @njit()
 def set_numba_seed(seed):
     np.random.seed(seed)

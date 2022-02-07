@@ -51,3 +51,14 @@ def geometric_p_cut(p, maxT):
     probs[-1] = 1 - probs[:-1].sum()
 
     return probs
+
+
+@njit()
+def sample(p):
+    r = np.random.rand()
+    s = 0.0
+    for i in range(len(p)):
+        s += p[i]
+        if s > r:
+            return i
+    raise ValueError("Sum of probs > 1")

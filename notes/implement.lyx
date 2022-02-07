@@ -112,7 +112,7 @@ We consider times from
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-p_{u,t}=p_{u}\left(t\mid C_{t}\right)=\exp\left\{ \sum_{k\in\partial u^{t}}\theta\left(t-t_{0,k}\right)\nu_{ku}^{t}\right\} 
+p_{u,t}=p_{u}\left(t\mid C_{t}\right)=\exp\left\{ \sum_{k\in\partial u^{t}}\boldsymbol{1}\left[t_{o,v}\leq t\leq t_{o,v}+d_{i,v}-1\right]\nu_{ku}^{t}\right\} 
 \end{equation}
 
 \end_inset
@@ -285,6 +285,17 @@ Term B
 \end_layout
 
 \begin_layout Standard
+Define 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\boldsymbol{1}\left[t_{o,v}\leq t\leq t_{o,v}+d_{i,v}-1\right]=I\left(v,t\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 Notes from remarkable
 \begin_inset Formula 
 \begin{align*}
@@ -322,7 +333,7 @@ Notes from remarkable
 \begin_layout Standard
 \begin_inset Formula 
 \[
-f\left(v,t,Z_{t}\right)=\left(1-p_{0}\right)\prod_{k\in\partial v^{t}}e^{\nu_{kv}^{t}}
+f\left(v,t,Z_{t}\right)=\left(1-p_{0}\right)\prod_{k\in\partial v^{t}}e^{\nu_{kv}^{t}I\left(k,t\right)}
 \]
 
 \end_inset
@@ -333,7 +344,7 @@ f\left(v,t,Z_{t}\right)=\left(1-p_{0}\right)\prod_{k\in\partial v^{t}}e^{\nu_{kv
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-f\left(v,t,Z_{t}^{I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}}\right)e^{\nu_{uv}^{t}}=f_{v\backslash u}\left(t,Z_{t}\right)e^{\nu_{uv}^{t}}
+f\left(v,t,Z_{t}^{I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}I\left(k,t\right)}\right)e^{\nu_{uv}^{t}}=f_{v\backslash u}\left(t,Z_{t}\right)e^{\nu_{uv}^{t}}
 \end{equation}
 
 \end_inset
@@ -344,7 +355,7 @@ f\left(v,t,Z_{t}^{I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\
 \begin_layout Standard
 \begin_inset Formula 
 \begin{equation}
-f\left(v,t,Z_{t}^{\neg I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}}\right)=f_{v\backslash u}\left(t,Z_{t}\right)
+f\left(v,t,Z_{t}^{\neg I}\right)=\left(1-p_{0}\right)\left(\prod_{k\in\partial v^{t}\backslash u}e^{\nu_{kv}^{t}I\left(k,t\right)}\right)=f_{v\backslash u}\left(t,Z_{t}\right)
 \end{equation}
 
 \end_inset

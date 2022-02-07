@@ -5,7 +5,7 @@ from numba.typed import Dict, List
 from numba.core import types
 
 float_array = types.float64[:]
-spec = [
+node_spec = [
     ("i", types.int_),
     ("neighs_out", types.DictType(types.int_, types.int_)),
     ("loglambs", types.ListType(float_array)),
@@ -14,8 +14,8 @@ spec = [
     ("lam_cs_f",types.DictType(types.int_, float_array)) ,
     ("lam_cs_b",types.DictType(types.int_, float_array)),
 ]
-@jitclass(spec)
-class Node:
+#@jitclass(spec)
+class NodePy:
     def __init__(self, i) -> None:
         self.i = i
         self.neighs_out = Dict.empty(key_type=types.int_,
@@ -80,9 +80,11 @@ class Node:
             
             self.sum_lam[j] = self.loglambs[idj].sum()
 
+Node =jitclass(NodePy, node_spec)
+
 kt = Node.class_type.instance_type
 #@njit()
-def make_nodes_contacts(cts, T, nodes=None):
+def make_nodes_contacts_nb(cts, T, nodes=None):
     if nodes is None:
         nodes =  Dict.empty(key_type=types.int_,
                             value_type=kt)
@@ -98,6 +100,25 @@ def make_nodes_contacts(cts, T, nodes=None):
         node.add_contact(j,t, np.log(1-lam), T)
         if j not in nodes:
             nodes[j] = Node(j)
+        nodes[j].add_incoming_c(i)
+        
+    return nodes
+
+def make_nodes_contacts_py(cts, T, nodes=None):
+    if nodes is None:
+        nodes =  {}
+    for c in range(len(cts)):
+        #i = int(ct.i)
+        t=int(cts[c][0])
+        i=int(cts[c][1])
+        j=int(cts[c][2])
+        lam = float(cts[c][3])
+        if i not in nodes:
+            nodes[i] = NodePy(i)
+        node = nodes[i]
+        node.add_contact(j,t, np.log(1-lam), T)
+        if j not in nodes:
+            nodes[j] = NodePy(j)
         nodes[j].add_incoming_c(i)
         
     return nodes
