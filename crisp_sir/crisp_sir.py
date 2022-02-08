@@ -3,14 +3,12 @@ import numpy as np
 from numba import njit, jit
 
 
-from .base import get_state_time, sample
+from .base import get_state_time, sample, set_numba_seed
 from .observ import *
 
 
 
-@njit()
-def set_numba_seed(seed):
-    np.random.seed(seed)
+
 
 def geom_prob(p0,T,nosum=False):
     probs = (1-p0)**(np.arange(0,T)-1)*p0
@@ -238,7 +236,7 @@ def _calc_crisp_step(contacts, state, prec, p0inf, logC_term, u, pars, T_crisp,)
 
 @njit()
 def _write_state(u, t0, dinf, T, state):
-    for t in range(T):
+    for t in range(T+1):
         state[u][t] = get_state_time(t, t0, dinf)
 
 def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0,
@@ -268,12 +266,12 @@ def run_crisp(pars, observ, contacts, num_samples, mat_obs, burn_in=0,
     tinf = randgen.randint(0,T) 
     ul = randgen.randint(0,N)
     if state is None:
-        state = np.zeros((N,T),dtype=np.int8)
+        state = np.zeros((N,T+1),dtype=np.int8)
         ## starting condition is not really important
         if(start_inf):
             state[ul,tinf:] = 1
 
-    stats = np.zeros((N,T,3),dtype=np.int_)
+    stats = np.zeros((N,T+1,3),dtype=np.int_)
     changes = []
     contacts_CRISP = contacts[:,:3].astype(int)
     #contacts = contacts_CRISP

@@ -31,6 +31,10 @@ def make_obs_dict(obs_list, conf_mat, T):
             o_mat[t0][:di] += probs[2]
             o_mat[t0][di:] += probs[1]
 
+    for iu in obs_dict:
+        mat = obs_dict[iu]
+        for t0 in range(T+2):
+            mat[t0][T+2-t0:] = -np.inf
     return obs_dict
 
 @nb.njit()
@@ -92,8 +96,13 @@ def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
         if t0>=2:
             loga1 += (t0-1)*logp0
             loga1 += Ku[t0-2]
-        for dinf in range(1,T+2):
-            logA[t0,dinf-1] = loga1 + logpdinf[dinf]
+        lim = min(T+3-t0, T+2)
+        for dinf in range(1,lim):
+            if dinf == lim-1:
+                logA[t0,dinf-1] = loga1 + np.log(np.exp(logpdinf[dinf:]).sum())
+            else:
+                logA[t0,dinf-1] = loga1 + logpdinf[dinf]
+        #logA[t0][T+2-t0:] = np.nan
     return logA
 
 @nb.njit()
@@ -143,7 +152,8 @@ def calc_logB(nodes, times, u, T, p0):
             fvu = -2
             lam_uvt=np.nan
         for t0 in range(T+2):
-            for di in range(1,T+2):
+            l = min(T+3-t0, T+2)
+            for di in range(1,l):
                 """t_max = min(t0+di-1,t0v-2)
                 if t0 <= T:
                     ## if t0=T+1 it can't infect anyone
@@ -170,7 +180,8 @@ def crisp_step_probs(nodes, times_st, idx_u, T, logp0s, logpdinf, logC_dict, par
         logp_sam+= logC_dict[idx_u]
 
 
-    return np.exp(logp_sam-logp_sam.max()) #np.exp(logp_sam)
+
+    return np.exp(logp_sam-np.max(logp_sam)) #np.exp(logp_sam)
 
     
 
@@ -200,6 +211,15 @@ def sample_state(probs):
 
     return i1, i2, pr_flat[idx]
 
+def sample_probs_nan(probs):
+    
+    idx_good = np.logical_not(np.isnan(probs))
+    idcs = np.where(idx_good)
+    pr_sam = probs[idx_good]
+
+    idx_sam = sample(pr_sam)
+    return idcs[0][idx_sam], idcs[1][idx_sam], pr_sam[idx_sam]    
+
 @nb.njit()
 def record_stats(stats,u, t0, dinf, T):
     for t in range(T+1):
@@ -222,7 +242,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         rng = np.random.RandomState(np.random.PCG64(seed))
 
     if state_times is None:
-        state_times = rng.randint(0, T+2, (N,2))
+        state_times = rng.randint(int(0.2*T),int(0.8*T), (N,2))
 
 
     logp0s = np.log(geometric_p_cut(p0, T+2))
@@ -245,7 +265,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         probs = crisp_step_probs(nodes, state_times, u, T,
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
-        probs /= probs.sum()
+        probs /= np.sum(probs)
         t0, dinf, pr_nor = sample_state(probs=probs)
         ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
         ## shift extracted dinf

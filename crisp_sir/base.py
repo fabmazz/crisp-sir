@@ -62,3 +62,8 @@ def sample(p):
         if s > r:
             return i
     raise ValueError("Sum of probs > 1")
+
+
+@njit()
+def set_numba_seed(seed):
+    np.random.seed(seed)
