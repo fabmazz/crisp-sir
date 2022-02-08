@@ -1,3 +1,4 @@
+from warnings import warn
 import numpy as np
 import numba as nb
 
@@ -169,11 +170,12 @@ def sample_state(probs):
 
     idx = sample(pr_flat)
     if c_cont:
-        i2 = int(idx/shape[1])
-        i1 = idx % shape[1]
+        i1 = int(idx/shape[1])
+        i2 = idx % shape[1]
     elif f_cont:
-        i2 = int(idx/shape[0])
-        i1 = idx % shape[0]
+        warn("using fortran array order")
+        i1 = int(idx/shape[0])
+        i2 = idx % shape[0]
     else:
         raise RuntimeError("Cannot understand shape")
 
@@ -224,7 +226,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_
         probs = crisp_step_probs(nodes, state_times, u, T,
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
-        t0, dinf, pr_nor = sample_state(logprobs=probs)
+        t0, dinf, pr_nor = sample_state(probs=probs)
 
         state_times[u,0] = t0
         state_times[u, 1] = dinf
