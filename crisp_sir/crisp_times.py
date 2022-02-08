@@ -150,15 +150,14 @@ def crisp_step_probs(nodes, times_st, idx_u, T, logp0s, logpdinf, logC_dict, par
         logp_sam+= logC_dict[idx_u]
 
 
-    return logp_sam #np.exp(logp_sam)
+    return np.exp(logp_sam-logp_sam.max()) #np.exp(logp_sam)
 
     
 
-def sample_state(logprobs):
+def sample_state(probs):
 
     #logprobs = crisp_step_probs(nodes, times_st, idx_u, T, logp0s, logpdinf, logC_dict, params)
 
-    probs = np.exp(logprobs-logprobs.max())
     c_cont = probs.flags.c_contiguous == True
     f_cont = probs.flags.f_contiguous == True
 
@@ -170,19 +169,19 @@ def sample_state(logprobs):
 
     idx = sample(pr_flat)
     if c_cont:
-        dinf = int(idx/shape[1])
-        t0 = idx % shape[1]
+        i2 = int(idx/shape[1])
+        i1 = idx % shape[1]
     elif f_cont:
-        dinf = int(idx/shape[0])
-        t0 = idx % shape[0]
+        i2 = int(idx/shape[0])
+        i1 = idx % shape[0]
     else:
         raise RuntimeError("Cannot understand shape")
 
-    return t0, dinf, pr_flat[idx]
+    return i1, i2, pr_flat[idx]
 
 @nb.njit()
 def record_stats(stats,u, t0, dinf, T):
-    for t in range(T):
+    for t in range(T+1):
         s = get_state_time(t, t0, dinf)
         stats[u,t, s]+=1
 
@@ -214,7 +213,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_
     changes = []
 
     stats_times = np.zeros((N,2,T+2), dtype=np.int_)
-    stats_st = np.zeros((N,T,3), dtype=np.int_)
+    stats_st = np.zeros((N,T+1,3), dtype=np.int_)
     ##compute cache
     for i in nodes:
         nodes[i].calc_cache(T)
@@ -222,10 +221,10 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_
     for i_s in range(nsteps):
         u = int(rng.random()*N)
 
-        logpr = crisp_step_probs(nodes, state_times, u, T,
+        probs = crisp_step_probs(nodes, state_times, u, T,
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
-        t0, dinf, pr_nor = sample_state(logprobs=logpr)
+        t0, dinf, pr_nor = sample_state(logprobs=probs)
 
         state_times[u,0] = t0
         state_times[u, 1] = dinf
