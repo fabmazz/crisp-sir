@@ -110,7 +110,7 @@ def _calc_sum_nu(nus, t0, di, t0v):
     nus=loglambdas
     """
     r = 0.
-    for t in range(t0, t0+di-1):
+    for t in range(t0, t0+di):
         if t <= t0v-2:
             r+= nus[t]
     return r
@@ -137,7 +137,7 @@ def calc_logB(nodes, times, u, T, p0):
             #print(fvu)
         else:
             fvu = -2
-            lam_uvt=-2
+            lam_uvt=np.nan
         for t0 in range(T+2):
             for di in range(1,T+2):
                 """t_max = min(t0+di-1,t0v-2)
