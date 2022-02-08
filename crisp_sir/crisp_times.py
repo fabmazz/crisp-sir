@@ -47,22 +47,21 @@ def calc_logput(nodes, times, T, i):
     return logput
 
 @nb.njit()
-def c_logfvu_t0v(v,u, times, nodes, p0):
+def c_logfvu(v,u, t, times, nodes, p0):
     #r = np.full(T,np.log(1-p0))
     r = np.log(1-p0)
-    t0v = times[v][0]
     
     for k in nodes[v].neighs_in:
         if k == u:
             #print("eq")
             continue
         t0k = times[k][0]
+        dinf_k = times[k][1]
         idx_v = nodes[k].neighs_out[v]
         lambs_kv = nodes[k].loglambs[idx_v]
-        #for t in range(t0k, min(t0k+times[k][1],T)):
-        #    r[t]+= lambs_kv[t]
-        if t0v >= t0k+1 and t0v <= t0k+times[k][1]:
-            r+= lambs_kv[t0v-1]
+        ## check if node k is infected
+        if t >= t0k and t <= t0k+dinf_k-1:
+            r+= lambs_kv[t]
     return r
 
 @nb.njit()
@@ -104,6 +103,19 @@ def _c_lambsB(nodd, v, t0, t_max, T):
     return ll
 
 @nb.njit()
+def _calc_sum_nu(nus, t0, di, t0v):
+    """
+    Compute the extact sum in the first part
+    of log B, without optimizations
+    nus=loglambdas
+    """
+    r = 0.
+    for t in range(t0, t0+di-1):
+        if t <= t0v-2:
+            r+= nus[t]
+    return r
+
+@nb.njit()
 def calc_logB(nodes, times, u, T, p0):
     """
     times is the actual sample
@@ -115,11 +127,12 @@ def calc_logB(nodes, times, u, T, p0):
         idx_v = nodd.neighs_out[v]
         #print(v)
         t0v = times[v][0]
+        nus = nodd.loglambs[idx_v]
         if t0v<=T and t0v>=1 and nodd.loglambs[idx_v][t0v-1] != 0:
             ## second part
             ## t0v <= T since it has to become infected, and not remain S
             ## t0v >= 1 since it has to be infected, not be the source
-            fvu = np.exp(c_logfvu_t0v(v, nodd.i, times, nodes, p0))
+            fvu = np.exp(c_logfvu(v,u,t=t0v-1, times=times, nodes=nodes, p0=p0))
             lam_uvt = nodd.loglambs[idx_v][t0v-1]
             #print(fvu)
         else:
@@ -127,12 +140,14 @@ def calc_logB(nodes, times, u, T, p0):
             lam_uvt=-2
         for t0 in range(T+2):
             for di in range(1,T+2):
-                t_max = min(t0+di-1,t0v-2)
+                """t_max = min(t0+di-1,t0v-2)
                 if t0 <= T:
                     ## if t0=T+1 it can't infect anyone
                     ## if t0=T it could, but we have no contacts at t=T
-                    ll = nodd.sum_lam[v]
+                    #ll = nodd.sum_lam[v]
                     logB[t0,di-1] += _c_lambsB(nodd, v, t0, t_max, T)
+                """
+                logB[t0, di-1] += _calc_sum_nu(nus,t0, di, t0v)
                         
                 if fvu >0 and t0v >=t0+1 and t0v <= t0+di:
                     logB[t0][di-1] += np.log(1-fvu*np.exp(lam_uvt))-np.log(1-fvu)
@@ -189,7 +204,7 @@ def record_stats(stats,u, t0, dinf, T):
 
     
 
-def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_times=None):
+def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=False, state_times=None):
     T = pars.T
     N = pars.N
 
@@ -227,13 +242,16 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, debug=False, state_
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
         t0, dinf, pr_nor = sample_state(probs=probs)
-
+        ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
+        ## shift extracted dinf
+        dinf +=1
         state_times[u,0] = t0
         state_times[u, 1] = dinf
 
         #stats_times[u,0, t0] +=1
         #stats_times[u,1,dinf] += 1
-        record_stats(stats_st,u, t0, dinf, T)
+        if i_s >= burn_in:
+            record_stats(stats_st,u, t0, dinf, T)
 
         changes.append((u, t0, dinf, pr_nor))
 
