@@ -78,15 +78,19 @@ def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
     logput = calc_logput(nodes, times, T, u)
 
     Ku = logput.cumsum()
+    logp0 = np.log(1-p0)
 
-    loglinf = np.log( 1-(1-p0)*np.exp(logput) ) - np.log(p0)
+    loglinf = np.log( 1-(1-p0)*np.exp(logput) ) 
+    # - np.log(p0)
     for t0 in range(T+2):
         loga1 = np.log(pi0(gamma,t0))
-        if t0>=1:
-            loga1 += logp0s[t0]
-            if t0<= T:
-                loga1 +=loglinf[t0-1]
+        if t0>=1 and t0<= T:
+            # we have no contacts at t=T,
+            # so the last time it can be infected
+            # is t=T-1
+            loga1 +=loglinf[t0-1]
         if t0>=2:
+            loga1 += (t0-1)*logp0
             loga1 += Ku[t0-2]
         for dinf in range(1,T+2):
             logA[t0,dinf-1] = loga1 + logpdinf[dinf]
@@ -241,6 +245,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         probs = crisp_step_probs(nodes, state_times, u, T,
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
+        probs /= probs.sum()
         t0, dinf, pr_nor = sample_state(probs=probs)
         ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
         ## shift extracted dinf
