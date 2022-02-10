@@ -30,6 +30,9 @@ def make_obs_dict(obs_list, conf_mat, T):
             di = t-t0
             o_mat[t0][:di] += probs[2]
             o_mat[t0][di:] += probs[1]
+        #for t0 in range(T+2):
+        #    for dinf in range(1,T+2):
+        #        o_mat[t0][dinf-1] += probs[get_state_time(t,t0,dinf)]
 
     for iu in obs_dict:
         mat = obs_dict[iu]
@@ -221,14 +224,14 @@ def sample_probs_nan(probs):
     return idcs[0][idx_sam], idcs[1][idx_sam], pr_sam[idx_sam]    
 
 @nb.njit()
-def record_stats(stats,u, t0, dinf, T):
+def record_stats(stats,i, t0, dinf, T):
     for t in range(T+1):
         s = get_state_time(t, t0, dinf)
-        stats[u,t, s]+=1
+        stats[i,t, s]+=1
 
     
 
-def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=False, state_times=None):
+def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=False, init_state=None):
     T = pars.T
     N = pars.N
 
@@ -241,10 +244,13 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         if debug: print("New generator")
         rng = np.random.RandomState(np.random.PCG64(seed))
 
-    if state_times is None:
-        state_times = rng.randint(int(0.2*T),int(0.8*T), (N,2))
+    if init_state is None:
+        conf_times = rng.randint(int(0.2*T),int(0.8*T), (N,2))
     else:
-        state_times = state_times.copy()
+        conf_times = init_state.copy()
+
+    if burn_in > nsteps:
+        raise ValueError("Burn-in steps higher than MC steps")
 
 
     logp0s = np.log(geometric_p_cut(p0, T+2))
@@ -255,8 +261,9 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
 
     changes = []
 
+
     stats_times = np.zeros((N,2,T+2), dtype=np.int_)
-    stats_st = np.zeros((N,T+1,3), dtype=np.int_)
+    count_states_SIR = np.zeros((N,T+1,3), dtype=np.int_)
     ##compute cache
     for i in nodes:
         nodes[i].calc_cache(T)
@@ -264,23 +271,27 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
     for i_s in range(nsteps):
         u = int(rng.random()*N)
 
-        probs = crisp_step_probs(nodes, state_times, u, T,
+        probs = crisp_step_probs(nodes, conf_times, u, T,
             logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
         probs /= np.sum(probs)
+        assert probs.shape == (T+2,T+1)
         t0, dinf, pr_nor = sample_state(probs=probs)
         ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
         ## shift extracted dinf
+        #if pr_nor > 0.9 and u not in obs_logC_term:
+        #    print(f"move {i_s}:  {u} to t0 {t0}, dinf {dinf} has p {pr_nor}")
+        #    print("conf: ", conf_times)
         dinf +=1
-        state_times[u,0] = t0
-        state_times[u, 1] = dinf
+        conf_times[u,0] = t0
+        conf_times[u, 1] = dinf
 
         #stats_times[u,0, t0] +=1
         #stats_times[u,1,dinf] += 1
         if i_s >= burn_in:
-            record_stats(stats_st,u, t0, dinf, T)
+            record_stats(count_states_SIR,u, t0, dinf, T)
 
         changes.append((u, t0, dinf, pr_nor))
 
 
-    return state_times, stats_st, changes
+    return conf_times, count_states_SIR, changes
