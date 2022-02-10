@@ -34,10 +34,10 @@ def make_obs_dict(obs_list, conf_mat, T):
         #    for dinf in range(1,T+2):
         #        o_mat[t0][dinf-1] += probs[get_state_time(t,t0,dinf)]
 
-    for iu in obs_dict:
+    """for iu in obs_dict:
         mat = obs_dict[iu]
         for t0 in range(T+2):
-            mat[t0][T+2-t0:] = -np.inf
+            mat[t0][T+2-t0:] = -np.inf"""
     return obs_dict
 
 @nb.njit()
@@ -99,11 +99,11 @@ def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
         if t0>=2:
             loga1 += (t0-1)*logp0
             loga1 += Ku[t0-2]
-        lim = min(T+3-t0, T+2)
-        for dinf in range(1,lim):
-            if dinf == lim-1:
-                logA[t0,dinf-1] = loga1 + np.log(np.exp(logpdinf[dinf:]).sum())
-            else:
+        #lim = min(T+3-t0, T+2)
+        for dinf in range(1,T+2):
+            #if dinf == lim-1:
+            #    logA[t0,dinf-1] = loga1 + np.log(np.exp(logpdinf[dinf:]).sum())
+            #else:
                 logA[t0,dinf-1] = loga1 + logpdinf[dinf]
         #logA[t0][T+2-t0:] = np.nan
     return logA
@@ -155,8 +155,8 @@ def calc_logB(nodes, times, u, T, p0):
             fvu = -2
             lam_uvt=np.nan
         for t0 in range(T+2):
-            l = min(T+3-t0, T+2)
-            for di in range(1,l):
+            #l = min(T+3-t0, T+2)
+            for di in range(1,T+2):
                 """t_max = min(t0+di-1,t0v-2)
                 if t0 <= T:
                     ## if t0=T+1 it can't infect anyone
