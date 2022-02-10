@@ -243,6 +243,8 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
 
     if state_times is None:
         state_times = rng.randint(int(0.2*T),int(0.8*T), (N,2))
+    else:
+        state_times = state_times.copy()
 
 
     logp0s = np.log(geometric_p_cut(p0, T+2))
