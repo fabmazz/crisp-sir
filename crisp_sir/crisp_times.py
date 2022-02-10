@@ -82,12 +82,12 @@ def pi0(gamma, t0):
 def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
     logA = np.zeros((T+2,T+1))
 
-    logput = calc_logput(nodes, times, T, u)
+    log_put = calc_logput(nodes, times, T, u)
 
-    Ku = logput.cumsum()
+    Ku = log_put.cumsum()
     logp0 = np.log(1-p0)
 
-    loglinf = np.log( 1-(1-p0)*np.exp(logput) ) 
+    loglinf = np.log( 1-(1-p0)*np.exp(log_put) ) 
     # - np.log(p0)
     for t0 in range(T+2):
         loga1 = np.log(pi0(gamma,t0))
@@ -224,10 +224,10 @@ def sample_probs_nan(probs):
     return idcs[0][idx_sam], idcs[1][idx_sam], pr_sam[idx_sam]    
 
 @nb.njit()
-def record_stats(stats,i, t0, dinf, T):
+def record_stats(stats,i, t0, dinf, T, value):
     for t in range(T+1):
         s = get_state_time(t, t0, dinf)
-        stats[i,t, s]+=1
+        stats[i,t, s]+=value
 
     
 
@@ -262,7 +262,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
     changes = []
 
 
-    stats_times = np.zeros((N,2,T+2), dtype=np.int_)
+    stats_times = np.zeros((N,T+2,T+1), dtype=np.int_)
     count_states_SIR = np.zeros((N,T+1,3), dtype=np.int_)
     ##compute cache
     for i in nodes:
@@ -279,19 +279,30 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         t0, dinf, pr_nor = sample_state(probs=probs)
         ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
         ## shift extracted dinf
+        dinf +=1
         #if pr_nor > 0.9 and u not in obs_logC_term:
         #    print(f"move {i_s}:  {u} to t0 {t0}, dinf {dinf} has p {pr_nor}")
         #    print("conf: ", conf_times)
-        dinf +=1
         conf_times[u,0] = t0
         conf_times[u, 1] = dinf
 
-        #stats_times[u,0, t0] +=1
-        #stats_times[u,1,dinf] += 1
+
         if i_s >= burn_in:
-            record_stats(count_states_SIR,u, t0, dinf, T)
+            stats_times[u, t0, dinf-1] += 1
+            #record_stats(count_states_SIR,u, t0, dinf, T)
 
         changes.append((u, t0, dinf, pr_nor))
 
 
-    return conf_times, count_states_SIR, changes
+    return conf_times, stats_times, changes
+
+
+@nb.njit()
+def transform_counts(counts_ts, N, T):
+    counts_SIR = np.zeros((N,T+1,3),dtype=np.int_)
+    for i in range(N):
+        for t0 in range(T+2):
+            for dinf in range(1,T+2):
+                v = counts_ts[i][t0][dinf-1]
+                record_stats(counts_SIR, i, t0, dinf, T, v)
+    return counts_SIR
