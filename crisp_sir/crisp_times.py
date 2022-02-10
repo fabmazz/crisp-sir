@@ -270,13 +270,19 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
     
     for i_s in range(nsteps):
         u = int(rng.random()*N)
+        if rng.random() < pars.p_seed/10:
+            ## set as source
+            t0=0
+            dinf=T
+            pr_nor = -0.1
+        else:
+            probs = crisp_step_probs(nodes, conf_times, u, T,
+                logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
 
-        probs = crisp_step_probs(nodes, conf_times, u, T,
-            logp0s=logp0s, logpdinf=logpdI, logC_dict= obs_logC_term, params=pars)
-
-        probs /= np.sum(probs)
-        assert probs.shape == (T+2,T+1)
-        t0, dinf, pr_nor = sample_state(probs=probs)
+            probs /= np.sum(probs)
+            assert probs.shape == (T+2,T+1)
+            t0, dinf, pr_nor = sample_state(probs=probs)
+        
         ## the matrix of probs is t0=(0,T+2) and dinf = (0,T+1)
         ## shift extracted dinf
         dinf +=1
