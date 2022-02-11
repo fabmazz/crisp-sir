@@ -79,7 +79,7 @@ def pi0(gamma, t0):
         return 1-gamma
 
 @nb.njit()
-def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
+def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma, p_sus):
     logA = np.zeros((T+2,T+1))
 
     log_put = calc_logput(nodes, times, T, u)
@@ -95,7 +95,9 @@ def calc_logA(nodes, times, u, T, logp0s, logpdinf, p0, gamma):
             # we have no contacts at t=T,
             # so the last time it can be infected
             # is t=T-1
-            loga1 +=loglinf[t0-1]
+            loga1 +=loglinf[t0-1] + np.log(1-p_sus)
+        elif t0 >= T+1:
+            loga1 += np.log(p_sus)
         if t0>=2:
             loga1 += (t0-1)*logp0
             loga1 += Ku[t0-2]
@@ -175,7 +177,7 @@ def calc_logB(nodes, times, u, T, p0):
 def crisp_step_probs(nodes, times_st, idx_u, T, logp0s, logpdinf, logC_dict, params):
 
     logp_sam = calc_logA(nodes, times_st, idx_u, T, logp0s, logpdinf=logpdinf,
-        p0=params.pautoinf, gamma=params.p_seed)
+        p0=params.pautoinf, gamma=params.p_seed, p_sus=params.p_sus)
 
     logp_sam += calc_logB(nodes, times_st, idx_u, T, p0=params.pautoinf)
 

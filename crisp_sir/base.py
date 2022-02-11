@@ -24,8 +24,8 @@ def make_params(N,T,pautoinf, p_source, lamda, mu,p_sus=0.5):
     if p_source < 0:
         p_source = 1/N
 
-    prob_seed = p_source / (2 - p_source)
-    p_sus = p_sus * (1-prob_seed)
+    prob_seed = p_source #/ (2 - p_source)
+    #p_sus = p_sus * (1-prob_seed)
 
     return Parameters(N,T, pautoinf, prob_seed, lamda, mu, p_sus)
 
