@@ -33,7 +33,7 @@ def _calc_logpobs_u(T_crisp, obs_u, mat_obs):
                 logpobs_u[t0,dinf] = observ_term_i(obs_u,mat_obs,t0,dinf)
     return logpobs_u
 
-def make_observat_term(observ_list, N, T, mat_obs, node_key="node", obs_key="obs",time_key="time"):
+def make_observat_term(observ_list, N, T, mat_obs):
     """
     Observations in format
     (node, state, time)

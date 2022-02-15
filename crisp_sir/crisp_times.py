@@ -173,7 +173,7 @@ def calc_logB(nodes, times, u, T, p0):
 
     return logB
 
-
+@nb.njit()
 def crisp_step_probs(nodes, times_st, idx_u, T, logp0s, logpdinf, logC_dict, params):
 
     logp_sam = calc_logA(nodes, times_st, idx_u, T, logp0s, logpdinf=logpdinf,
@@ -271,6 +271,8 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
         nodes[i].calc_cache(T)
     
     for i_s in range(nsteps):
+        if i_s % 1000 == 0 and i_s >= 1000:
+            print("\r{:5d}k /{:5d}k".format(int(i_s/1000), int(nsteps/1000)), end="")
         u = int(rng.random()*N)
 
         probs = crisp_step_probs(nodes, conf_times, u, T,
@@ -295,7 +297,7 @@ def run_crisp(nodes, pars, seed, nsteps, obs_logC_term=None, burn_in=0, debug=Fa
 
         changes.append((u, t0, dinf, pr_nor))
 
-
+    print("\tFinished")
     return conf_times, stats_times, changes
 
 
